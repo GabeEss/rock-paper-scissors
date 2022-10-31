@@ -1,4 +1,47 @@
+// This program first calls the startGame function.
+// It Gets three event listeners for four buttons.
+// First three buttons (rock, paper, scissors) calls playRound when clicked.
+// playRound compares the player choice (one of the three buttons), with the
+// computer choice, which is received from getComputerChoice.
+// playRound passes the result of the round to the results function.
+// The results function takes the argument and iterates on the global
+// variables. It also calls the reset function when the global constant for the
+// NUMBER_OF_ROUNDS has been reached.
+// The results function also calls the updateDOM function to update the
+// HTML DOM so the player can see the results of the round.
+// When the gameCount reaches the same number as NUMBER_OF_ROUNDS, it calls
+// the handleWinner function, which displays who won.
+// The reset function can be pressed at any time to reset the score and game count.
+
+const ROCK = "Rock";
+const PAPER = "Paper";
+const SCISSORS = "Scissors";
 const NUMBER_OF_ROUNDS = 5;
+
+let playerScore = 0;
+let computerScore = 0;
+let drawCount = 0;
+let gameCount = 0;
+
+startGame();
+
+// Listen for click event on each button, then the game continues.
+function startGame()
+{
+    const rock = document.querySelector("#rock"); // get button element (from id)
+    const paper = document.querySelector("#paper");
+    const scissors = document.querySelector("#scissors");
+    const resetBtn = document.querySelector("#reset");
+
+    // Listen for a click event at each button.
+    // Second parameter needs to be wrapped around a function to work, otherwise
+    // the second parameter is the return value, rather than a function.
+    rock.addEventListener('click', () => playRound(ROCK, getComputerChoice())); 
+    paper.addEventListener('click', () => playRound(PAPER, getComputerChoice()));
+    scissors.addEventListener('click',() => playRound(SCISSORS, getComputerChoice()));
+    resetBtn.addEventListener('click', () => reset());
+
+}
 
 // function gets a random value and returns it
 function getComputerChoice()
@@ -7,173 +50,147 @@ function getComputerChoice()
     let choice = Math.floor(Math.random() * 3) + 1;
     
     if(choice == 1)
-        return "Paper";
+        return PAPER;
     else if(choice == 2)
-        return "Rock";
+        return ROCK;
     else
-        return "Scissors";
+        return SCISSORS;
 }
-
-// function gets player input and returns it
-function getPlayerChoice()
-{
-   let choice = prompt("Rock, Paper, or Scissors?");
-
-    if(choice === null) // if the game was cancelled
-    {
-        return ""; // returns empty string
-    }
-
-   if(choice.toUpperCase() == "PAPER")
-   {
-        return "Paper";
-   }
-   else if(choice.toUpperCase() == "ROCK")
-   {
-        return "Rock";
-   }
-   else if(choice.toUpperCase() == "SCISSORS")
-   {
-        return "Scissors";
-   }
-   else
-   {
-        alert("Not valid, try again.");
-        getPlayerChoice();
-   }
-}
-
 
 // function determines who the winner of the round is
 function playRound(player, computer)
 {
-    if(player == "")
-        return;
+   // console.log(`You have chosen ${player}.\tThe computer chose ${computer}.`)
 
-    console.log(`You have chosen ${player}.\tThe computer chose ${computer}.`)
-
-    if(player == "Paper")
+    if(player == PAPER)
     {
-        if(computer == "Paper")
+        if(computer == PAPER)
         {
-            return "Draw";
+            results("Draw"); // call results function and pass the result of the round
         }
-        else if(computer == "Rock")
+        else if(computer == ROCK)
         {
-            return "Win";
+            results("Win");
         }
         else
         {
-            return "Loss";
+            results("Loss");
         }
     }
-    else if(player == "Rock")
+    else if(player == ROCK)
     {
-        if(computer == "Paper")
+        if(computer == PAPER)
         {
-            return "Loss";
+            results("Loss");
         }
-        else if(computer == "Rock")
+        else if(computer == ROCK)
         {
-            return "Draw";
+            results("Draw");
         }
         else
         {
-            return "Win";
+            results("Win");
         }
     }
     else // Player chose "Scissors"
     {
-        if(computer == "Paper")
+        if(computer == PAPER)
         {
-            return "Win";
+            results("Win");
         }
-        else if(computer == "Rock")
+        else if(computer == ROCK)
         {
-            return "Loss";
+            results("Loss");
         }
         else
         {
-            return "Draw";
+            results("Draw");
         }
     }
 }
 
-// plays a best of 5
-function game()
+// The results function iterates on the global win, loss, draw, and game count
+// values. Calls the reset function when the game ends.
+function results(res)
 {
-    let wins = 0;
-    let draws = 0;
-    let losses = 0;
-    let cancel = 0;
-
-    for(i = 1; i <= NUMBER_OF_ROUNDS; i++)
+    // if we have finished the last game and the player clicks again, reset global values
+    if(gameCount == NUMBER_OF_ROUNDS) 
     {
-        player = getPlayerChoice();
-        if(player == "") // test to see if cancelled
-        {
-            cancel = 1;
-            break; // breaks out of the loop
-        }
-
-        let round = playRound(player, getComputerChoice());
-
-        if(round == "Win")
-        {
-            wins += 1;
-            console.log(`You have won round ${i}!`);
-        }
-        else if(round == "Draw")
-        {
-            draws += 1;
-            console.log(`Round ${i} is a tie!`);
-        }
-        else
-        {
-            losses += 1;
-            console.log(`You have lost round ${i}!`);
-        }
+        reset();
     }
 
-    let results;
+    gameCount += 1;
 
-    if(cancel == 1) // if player cancelled the event return an array with -1
-        results = [-1]; 
-    else // otherwise return an array containing the wins, draws, losses
-        results = [wins, draws, losses];
-    
-    return results;
+    if(res == "Win"){
+        playerScore += 1;
+    }
+
+    if(res == "Loss"){
+        computerScore += 1;
+    }
+
+    if(res == "Draw"){
+        drawCount += 1;
+    }
+
+    updateDOM();
 }
 
-function result()
+// Resets the scores, game count, and removes the last winner.
+function reset()
 {
-   let gameArr = game(); // an array containing the results of the game
+    gameCount = 0;
+    playerScore = 0;
+    computerScore = 0;
+    drawCount = 0;
+    updateDOM();
+    handleWinner();
+}
 
-   if(gameArr[0] == -1) // if -1 is the first value, the game was cancelled
-   {
-        alert("The game has been cancelled.");
-        return;
-   }
-   else
-   {
-        console.log(`Wins: ${gameArr[0]}\tDraws: ${gameArr[1]}\tLosses: ${gameArr[2]}`);
+// The updateDom function is responsible for updating the DOM with the global
+// scores.
+function updateDOM()
+{
+    const wins = document.querySelector("#wins");
+    const losses = document.querySelector("#losses");
+    const draws = document.querySelector("#draws");
+    const games = document.querySelector("#games");
 
-        if(gameArr[0] > gameArr[2])
-            console.log("You win the game!");
-        else if(gameArr[2] > gameArr[0])
-            console.log("You lose the game!");
+    wins.textContent = 'Player score: ' + playerScore.toString();
+    losses.textContent = 'Computer score: ' + computerScore.toString();
+    draws.textContent = 'Draws: ' + drawCount.toString();
+    games.textContent = 'Round: ' + gameCount.toString();
+
+    if(gameCount == NUMBER_OF_ROUNDS) // final round
+    {
+        handleWinner();
+    }
+}
+
+// Shows who won.
+function handleWinner()
+{
+    const winnerPara = document.querySelector("#winner"); // get element
+
+    if(gameCount == NUMBER_OF_ROUNDS) 
+    {
+        let whoWon = "";
+
+        if(playerScore > computerScore)
+        {
+            whoWon = "The Player Wins";
+        }
+        else if(computerScore > playerScore)
+        {
+            whoWon = "The Computer Wins";
+        }
         else
-            console.log("The game ended in a tie!");
-   }
-}
-
-// calls result(), which calls game(), which calls playRound()
-// 5 times, playRound() is passed the values from
-// getPlayerChoice() and getComputerChoice() during each iteration. If
-// the prompt is cancelled, the game is cancelled and the loop is terminated.
-result(); 
-
-function setRounds()
-{
-
+        {
+            whoWon = "No One Wins"
+        }
+        
+        winnerPara.textContent = whoWon.toString(); // display who won
+    }
+    else
+        winnerPara.textContent = ""; // reset
 }
